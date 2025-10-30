@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const port = process.env.PORT || 3000;
 
@@ -33,6 +33,65 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+    const usersDB = client.db('usersDB');
+    const usersCollection = usersDB.collection('users')
+
+
+    app.get('/users', async(req, res) => {
+      const cursor = usersCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+
+    app.get('/users/:id', async(req, res) => {
+      const id = req.params.id;
+      console.log("Need User with id", id);
+
+      const query = { _id: new ObjectId(id) }
+      
+      const result = await usersCollection.findOne(query)
+      res.send(result)
+      
+    })
+
+
+    // add database related APIs here
+
+
+    app.post('/users', async(req, res) => {
+      const newUser = req.body;
+      console.log(' User info', newUser);
+
+      const result = await usersCollection.insertOne(newUser);
+      res.send(result);
+      
+    })
+
+
+    app.patch('/users/:id', (req, res) => {
+      const id = req.params.id;
+      const updatedUser = req.body;
+      const query = { _id: new ObjectId(id) }
+      const update = {
+        $set: {
+          name: updatedUser.name,
+          email: updatedUser.email
+        }
+      }
+    })
+
+
+
+    app.delete('/users/:id', async(req, res) => {
+      console.log(req.params.id);
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await usersCollection.deleteOne(query);
+      res.send(result)
+      
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
