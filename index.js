@@ -69,9 +69,11 @@ async function run() {
     })
 
 
-    app.patch('/users/:id', (req, res) => {
+    app.patch('/users/:id', async(req, res) => {
       const id = req.params.id;
       const updatedUser = req.body;
+      console.log('to update', id, updatedUser);
+      
       const query = { _id: new ObjectId(id) }
       const update = {
         $set: {
@@ -79,6 +81,10 @@ async function run() {
           email: updatedUser.email
         }
       }
+      const options = {}
+      const result = await usersCollection.updateOne(query, update, options);
+
+      res.send(result)
     })
 
 
